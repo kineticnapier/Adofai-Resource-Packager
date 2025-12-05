@@ -15,7 +15,7 @@ ADOFAI の譜面ファイルを読み込み、その譜面内で参照されて�
 ## インストール / 実行方法
 1. リポジトリをクローンします。
    ```bash
-   git clone https://github.com/<your-account>/Adofai-Resource-Packager.git
+   git clone https://github.com/kineticnapier/Adofai-Resource-Packager.git
    cd Adofai-Resource-Packager
    ```
 2. .NET 8 SDK をインストールした環境でビルドします。
