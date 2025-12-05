@@ -1,0 +1,79 @@
+﻿<Window x:Class="Adofai_Resource_Packager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Adofai_Resource_Packager"
+        mc:Ignorable="d"
+        Title="ADOFAI Resource Packager"
+        Width="800"
+        Height="300"
+        MinWidth="600"
+        MinHeight="250">
+    <Grid Margin="16">
+        <!-- 行を定義 -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- タイトル -->
+            <RowDefinition Height="Auto"/>
+            <!-- サブタイトル -->
+            <RowDefinition Height="Auto"/>
+            <!-- ファイル選択 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 区切り -->
+            <RowDefinition Height="Auto"/>
+            <!-- 処理ボタン -->
+            <RowDefinition />
+            <!-- 余白（将来ログなどを置ける） -->
+        </Grid.RowDefinitions>
+
+        <!-- タイトル -->
+        <TextBlock Grid.Row="0"
+                   Text="ADOFAI Resource Packager"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   Margin="0,0,0,8"/>
+
+        <!-- 説明 -->
+        <TextBlock Grid.Row="1"
+                   Text="Load the .adofai file and zip audios, images, and the adofai file."
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,16"/>
+
+        <!-- ファイル選択行 -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center">
+            <Button Content="Load File"
+                    Width="100"
+                    Click="Select_Click"
+                    Margin="0,0,8,0"/>
+            <TextBlock Text="Selected File Path:"
+                       VerticalAlignment="Center"
+                       Margin="0,0,4,0"/>
+            <TextBox x:Name="path"
+                     IsReadOnly="True"
+                     VerticalAlignment="Center"
+                     MinWidth="300"/>
+        </StackPanel>
+
+        <!-- 区切り線 -->
+        <Separator Grid.Row="3" Margin="0,16,0,16"/>
+
+        <!-- 処理ボタン -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
+            <Button Content="Process"
+                    Width="100"
+                    Click="Process_Click"/>
+            <!-- 将来「設定」ボタンなどを足せるスペース -->
+        </StackPanel>
+
+        <!-- 将来ログを出す場所の例
+        <TextBox Grid.Row="5"
+                 Margin="0,16,0,0"
+                 IsReadOnly="True"
+                 VerticalScrollBarVisibility="Auto"
+                 Text="Log will be shown here..."/>
+        -->
+    </Grid>
+</Window>
