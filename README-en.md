@@ -15,7 +15,7 @@ Adofai-Resource-Packager is a WPF utility that reads ADOFAI chart files, automat
 ## Installation / Run
 1. Clone the repository.
    ```bash
-   git clone https://github.com/<your-account>/Adofai-Resource-Packager.git
+   git clone https://github.com/kineticnapier/Adofai-Resource-Packager.git
    cd Adofai-Resource-Packager
    ```
 2. Build with .NET 8 SDK installed.
