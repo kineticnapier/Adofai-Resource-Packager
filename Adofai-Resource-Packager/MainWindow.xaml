@@ -23,6 +23,8 @@
             <!-- 区切り -->
             <RowDefinition Height="Auto"/>
             <!-- 処理ボタン -->
+            <RowDefinition Height="Auto"/>
+            <!-- プログレスバー -->
             <RowDefinition />
             <!-- 余白（将来ログなどを置ける） -->
         </Grid.RowDefinitions>
@@ -66,6 +68,19 @@
                     Width="100"
                     Click="Process_Click"/>
             <!-- 将来「設定」ボタンなどを足せるスペース -->
+        </StackPanel>
+
+        <!-- プログレスバー表示 -->
+        <StackPanel Grid.Row="5" Margin="0,16,0,0">
+            <TextBlock x:Name="progressText"
+                       Text=""
+                       Visibility="Collapsed"
+                       Margin="0,0,0,4"/>
+            <ProgressBar x:Name="progressBar"
+                         Minimum="0"
+                         Maximum="100"
+                         Height="16"
+                         Visibility="Collapsed"/>
         </StackPanel>
 
         <!-- 将来ログを出す場所の例
