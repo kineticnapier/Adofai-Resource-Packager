@@ -2,8 +2,12 @@
 
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows.Threading;
 
 using Path = System.IO.Path;
 
@@ -37,11 +41,15 @@ namespace Adofai_Resource_Packager
             {
                 ret = ofd.FileName;
             }
+            else
+            {
+                ret = string.Empty;
+            }
 
             path.Text = ret;
         }
 
-        private void Process_Click(object sender, RoutedEventArgs e)
+        private async void Process_Click(object sender, RoutedEventArgs e)
         {
             var result = new List<string>();
 
@@ -104,23 +112,33 @@ namespace Adofai_Resource_Packager
 
             // 重複防止用
             var added = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string adofaiFileName = Path.GetFileName(ret);
 
+            // ファイル名→フルパスのマップを作成（重複名は最初のものを採用）
+            var nameToPath = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var f in files)
             {
                 string fileName = Path.GetFileName(f);
 
-                // 自分自身(adofaiファイル)は除外
-                if (fileName.Equals(Path.GetFileName(ret), StringComparison.OrdinalIgnoreCase))
+                if (fileName.Equals(adofaiFileName, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                // ファイル名がテキスト内に含まれているかチェック（完全一致ベース）
-                if (fileContent.Contains(fileName, StringComparison.OrdinalIgnoreCase))
+                nameToPath.TryAdd(fileName, f);
+            }
+
+            if (nameToPath.Count > 0)
+            {
+                // 参照判定を1回の走査で済ませるため、すべてのファイル名をまとめて検索する
+                string pattern = string.Join("|", nameToPath.Keys.Select(Regex.Escape));
+                var regex = new Regex(pattern, RegexOptions.IgnoreCase);
+
+                foreach (Match match in regex.Matches(fileContent))
                 {
-                    if (added.Add(f))
+                    if (nameToPath.TryGetValue(match.Value, out var fullPath) && added.Add(fullPath))
                     {
-                        result.Add(f);
+                        result.Add(fullPath);
                     }
                 }
             }
@@ -152,45 +170,69 @@ namespace Adofai_Resource_Packager
             }
 
             string zipPath = sfd.FileName;
+            int totalEntries = result
+                .Select(Path.GetFileName)
+                .Where(name => name is not null)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Count();
+
+            progressBar.Minimum = 0;
+            progressBar.Maximum = Math.Max(1, totalEntries);
+            progressBar.Value = 0;
+            progressBar.Visibility = Visibility.Visible;
+            progressText.Visibility = Visibility.Visible;
+            progressText.Text = "Creating zip file...";
 
             try
             {
-                // 既に同名の zip があれば削除（上書き）
-                if (File.Exists(zipPath))
+                await Task.Run(() =>
                 {
-                    File.Delete(zipPath);
-                }
-
-                // ZipArchive を作成モードで開く
-                using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
-                {
-                    // zip 内部での重複ファイル名を防ぐためのセット
-                    var entryNameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                    foreach (var f in result)
+                    // 既に同名の zip があれば削除（上書き）
+                    if (File.Exists(zipPath))
                     {
-                        if (!File.Exists(f))
-                        {
-                            // 途中で削除されたなどの場合はスキップ
-                            continue;
-                        }
-
-                        // zip 内のエントリ名（ここではファイル名のみ）
-                        string entryName = Path.GetFileName(f);
-
-                        // 同じファイル名が既に追加されていればスキップ
-                        if (!entryNameSet.Add(entryName))
-                        {
-                            // 必要なら別名にする処理を書くこともできるが、
-                            // ここではシンプルにスキップ
-                            continue;
-                        }
-
-                        // ファイルを zip エントリとして追加
-                        zip.CreateEntryFromFile(f, entryName);
+                        File.Delete(zipPath);
                     }
-                }
 
+                    // ZipArchive を作成モードで開く
+                    using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+                    {
+                        // zip 内部での重複ファイル名を防ぐためのセット
+                        var entryNameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        int processed = 0;
+
+                        foreach (var f in result)
+                        {
+                            if (!File.Exists(f))
+                            {
+                                // 途中で削除されたなどの場合はスキップ
+                                continue;
+                            }
+
+                            // zip 内のエントリ名（ここではファイル名のみ）
+                            string entryName = Path.GetFileName(f);
+
+                            // 同じファイル名が既に追加されていればスキップ
+                            if (!entryNameSet.Add(entryName))
+                            {
+                                // 必要なら別名にする処理を書くこともできるが、
+                                // ここではシンプルにスキップ
+                                continue;
+                            }
+
+                            // ファイルを zip エントリとして追加
+                            zip.CreateEntryFromFile(f, entryName);
+
+                            processed++;
+                            Dispatcher.Invoke(() =>
+                            {
+                                progressBar.Value = processed;
+                                progressText.Text = $"Packing files... {processed}/{totalEntries}";
+                            }, DispatcherPriority.Background);
+                        }
+                    }
+                });
+
+                progressText.Text = "Completed.";
                 MessageBox.Show(
                     "Zip file created:\n" + zipPath,
                     "Completed",
@@ -200,6 +242,12 @@ namespace Adofai_Resource_Packager
             catch (Exception ex)
             {
                 Throw_error("Failed to create zip file.\n" + ex.Message);
+            }
+            finally
+            {
+                progressBar.Value = 0;
+                progressBar.Visibility = Visibility.Collapsed;
+                progressText.Visibility = Visibility.Collapsed;
             }
         }
     }
