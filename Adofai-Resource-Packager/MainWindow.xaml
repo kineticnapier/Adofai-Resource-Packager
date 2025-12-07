@@ -72,11 +72,11 @@
 
         <!-- プログレスバー表示 -->
         <StackPanel Grid.Row="5" Margin="0,16,0,0">
-            <TextBlock x:Name="progressText"
+            <TextBlock Name="progressText"
                        Text=""
                        Visibility="Collapsed"
                        Margin="0,0,0,4"/>
-            <ProgressBar x:Name="progressBar"
+            <ProgressBar Name="progressBar"
                          Minimum="0"
                          Maximum="100"
                          Height="16"
